@@ -1,0 +1,240 @@
+html {
+  --background-dark: #888888;
+  --background-light: #e0e0e0;
+  --border-light: #ffffff;
+  --border-dark: #bdbdbd;
+}
+
+body {
+  align-items: center;
+  background: var(--background-dark);
+  display: flex;
+  justify-content: center;
+  margin: 0;
+}
+
+.hud,
+.window,
+.world {
+  float: left;
+  position: relative;
+}
+
+.hud {
+  box-sizing: border-box;
+  margin-bottom: 20px;
+  padding: 20px;
+  width: 100%;
+}
+
+.window {
+  background: var(--background-light);
+  border: 7px solid var(--border-light);
+  border-bottom-color: var(--border-dark);
+  border-right-color: var(--border-dark);
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  transform-origin: top center;
+}
+
+.hud,
+.world {
+  border: 7px solid var(--border-dark);
+  border-bottom-color: var(--border-light);
+  border-right-color: var(--border-light);
+}
+
+.world {
+  background: var(--background-dark);
+}
+
+.tile {
+  align-items: center;
+  background: var(--background-light);
+  border: solid transparent;
+  display: flex;
+  float: left;
+  font: 600 50px/50px monospace;
+  justify-content: center;
+  position: relative;
+  user-select: none;
+}
+
+.tile div {
+  pointer-events: none;
+}
+
+.tile.-closed {
+  border-bottom-color: var(--border-dark);
+  border-left-color: var(--border-light);
+  border-right-color: var(--border-dark);
+  border-top-color: var(--border-light);
+}
+
+.mine {
+  align-items: center;
+  background: black;
+  border-radius: 50%;
+  display: flex;
+  height: 36px;
+  justify-content: center;
+  width: 36px;
+}
+
+/* TODO: radial is beneath */
+.mine-cross-spikes {
+  align-items: center;
+  background: radial-gradient(black, transparent);
+  border-radius: 50%;
+  display: flex;
+  height: 36px;
+  justify-content: center;
+  transform: rotate(45deg);
+  width: 36px;
+}
+
+.mine::before,
+.mine::after,
+.mine-cross-spikes::before,
+.mine-cross-spikes::after {
+  background: black;
+  content: '';
+  display: block;
+  height: 6px;
+  position: absolute;
+  width: 50px;
+}
+
+.mine::after,
+.mine-cross-spikes::after {
+  transform: rotate(90deg);
+}
+
+.mine-highlight {
+  background: white;
+  border-radius: 50%;
+  height: 10px;
+  left: 15px;
+  position: absolute;
+  top: 15px;
+  width: 10px;
+  z-index: 1;
+}
+
+.flag {
+  background: black;
+  height: 40px;
+  width: 6px;
+}
+
+.flag::before,
+.flag::after {
+  content: '';
+  position: absolute;
+}
+
+.flag::before {
+  border: 20px solid transparent;
+  border-radius: 10px;
+  border-top-color: black;
+  border-top-width: 6px;
+  bottom: -16px;
+  left: 5px;
+}
+
+.flag::after {
+  border: 12px solid transparent;
+  border-right: 20px solid red;
+  right: 22px;
+  top: 2px;
+}
+
+.countdown,
+.timer {
+  float: left;
+  padding: 10px;
+  background: black;
+}
+
+.timer {
+  float: right;
+}
+
+.digit {
+  float: left;
+  height: 120px;
+  padding: 0 20px;
+  position: relative;
+  width: 33px;
+}
+
+.dash {
+  background: #580101;
+  height: 10px;
+  position: absolute;
+  transform-origin: top center;
+  width: 34px;
+}
+
+.dash.lit {
+  background: red;
+}
+
+.dash::before,
+.dash::after {
+  border: 5px solid #580101;
+  content: '';
+  position: absolute;
+}
+
+.dash.lit::before,
+.dash.lit::after {
+  border: 5px solid red;
+}
+
+.dash::before {
+  border-bottom-color: transparent !important;
+  border-right-color: transparent !important;
+  left: 100%;
+}
+
+.dash::after {
+  border-bottom-color: transparent !important;
+  border-left-color: transparent !important;
+  right: 100%;
+}
+
+.dash-1 {
+  transform: rotate(-90deg) translate(-30px, -30px);
+}
+
+.dash-2 {
+  transform: rotate(-90deg) translate(-90px, -30px);
+}
+
+.dash-3 {}
+
+.dash-4 {
+  height: 12px;
+  transform: translate(-5px, 54px);
+  width: 44px;
+}
+
+.dash-4::before,
+.dash-4::after {
+  border-top-color: transparent !important;
+  border-width: 6px;
+}
+
+.dash-5 {
+  transform: rotate(180deg) translate(0, -120px);
+}
+
+.dash-6 {
+  transform: rotate(90deg) translate(30px, -30px);
+}
+
+.dash-7 {
+  transform: rotate(90deg) translate(90px, -30px);
+}
