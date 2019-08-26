@@ -12,24 +12,46 @@ class Game {
   world = document.getElementById('world');
   timerDisplay = document.getElementById('timer');
   countdownDisplay = document.getElementById('countdown');
+  resetButton = document.getElementById('reset-button');
   timer = 0;
   countdown: number = config.mines;
   clickHandler = (e: EventWithTarget) => this.onClick(e);
   rightClickHandler = (e: EventWithTarget) => this.onRightClick(e);
+  resetClickHandler = (e: Event) => this.onResetClick(e);
   gameStarted = false;
   mineGenerator = new MineGenerator();
   flagGenerator = new FlagGenerator();
   countDownCtrl = new FancyNumberDisplay(this.countdownDisplay);
   timerCtrl = new FancyNumberDisplay(this.timerDisplay);
-  timerTimeout: number;
+  timerInterval: number;
   startTime: number;
 
   constructor() {
+    this.newGame();
+  }
+
+  newGame() {
     this.drawMap();
+    this.initResetButton();
     this.setUpInteraction();
     this.updateCountdown();
     this.updateTimer();
     this.resize();
+  }
+
+  onResetClick(e: Event) {
+    this.world.innerHTML = '';
+    this.stopTimer();
+    this.updateTimer();
+    this.tiles = [];
+    this.mines = [];
+    this.countdown = config.mines;
+    this.gameStarted = false;
+    this.newGame();
+  }
+
+  initResetButton() {
+    this.resetButton.style.borderWidth = `${config.tileBorder}px`;
   }
 
   resize() {
@@ -66,8 +88,12 @@ class Game {
   }
 
   setUpInteraction() {
-    window.addEventListener('click', this.clickHandler);
-    window.addEventListener('contextmenu', this.rightClickHandler, false);
+    window.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+    });
+    this.world.addEventListener('click', this.clickHandler);
+    this.world.addEventListener('contextmenu', this.rightClickHandler, false);
+    this.resetButton.addEventListener('click', this.resetClickHandler);
   }
 
   startGame(clickedTileId: number) {
@@ -77,11 +103,16 @@ class Game {
   }
 
   startTimer() {
+    this.timer = 0;
     this.startTime = new Date().getTime();
-    this.timerTimeout = setInterval(() => {
+    this.timerInterval = setInterval(() => {
       this.timer = ~~((new Date().getTime() - this.startTime) / 1000);
       this.updateTimer();
     }, 1000);
+  }
+
+  stopTimer() {
+    clearInterval(this.timerInterval);
   }
 
   onClick(e: EventWithTarget) {
@@ -97,10 +128,23 @@ class Game {
     // Game end
     if (clickedTile.armed && clickedTile.flagged !== FlagType.FLAGGED) {
       this.endGame(clickedTile);
+      this.stopTimer();
       return;
     };
 
     this.openTile(clickedTile);
+    this.checkGameState();
+  }
+
+  checkGameState() {
+    // Let's see if there is anything up here
+    const armedTiles = this.tiles.filter(tile => tile.armed);
+    const closedTiles = this.tiles.filter(tile => !tile.open);
+    if (armedTiles.length === closedTiles.length) {
+      armedTiles.forEach(tile => this.flagTile(tile, true));
+      this.removeInteraction();
+      this.stopTimer();
+    }
   }
 
   openTile(tile: Tile) {
@@ -119,24 +163,27 @@ class Game {
   }
 
   onRightClick(e: EventWithTarget) {
-    e.preventDefault();
-
     const clickedTile = this.tiles.find(tile => tile.symbol === e.target);
     if (!clickedTile) return;
 
-    const id = this.tiles.indexOf(clickedTile);
-    if (!id && id !== 0) return;
-
-
-    this.flagTile(this.tiles[id]);
+    this.flagTile(clickedTile);
   }
 
-  flagTile(tile: Tile) {
-    if (tile.open) return;
+  flagTile(tile: Tile, forceFlag: boolean = false) {
+    if (tile.open || forceFlag && tile.flagged === FlagType.FLAGGED) return;
 
+    if (forceFlag && tile.flagged !== FlagType.FLAGGED) {
+      tile.symbol.innerHTML = '';
+      tile.symbol.appendChild(this.flagGenerator.dispatch());
+      tile.flagged = FlagType.FLAGGED;
+      this.countdown--;
+      this.updateCountdown();
+      return;
+    }
 
     switch (tile.flagged) {
       case FlagType.NONE:
+        tile.symbol.innerHTML = '';
         tile.symbol.appendChild(this.flagGenerator.dispatch());
         tile.flagged = FlagType.FLAGGED;
         this.countdown--;
@@ -203,8 +250,6 @@ class Game {
     }
   }
 
-
-
   updateIndicators() {
     for (var i = 0, il = config.size.x * config.size.y; i < il; i++) {
       const iteratedTile = this.tiles[i];
@@ -224,16 +269,24 @@ class Game {
     tile.symbol.style.background = 'red';
 
     this.tiles.forEach(tile => {
-      if (tile.armed && tile.flagged !== FlagType.FLAGGED) {
+      const nonMarked = tile.armed && tile.flagged !== FlagType.FLAGGED;
+      const wronglyMarked = !tile.armed && tile.flagged === FlagType.FLAGGED;
+      if (nonMarked || wronglyMarked) {
         tile.symbol.innerHTML = '';
         tile.symbol.classList.remove('-closed');
         tile.symbol.appendChild(this.mineGenerator.dispatch());
+
+        if (wronglyMarked) tile.symbol.classList.add('-cross');
       }
     });
 
+    this.removeInteraction();
+    // alert('Game over');
+  }
+
+  removeInteraction() {
     this.world.removeEventListener('click', this.clickHandler);
     this.world.removeEventListener('contextmenu', this.rightClickHandler);
-    // alert('Game over');
   }
 
   getAdjacentTiles(id: number) {

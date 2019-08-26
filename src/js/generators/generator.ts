@@ -6,7 +6,7 @@ export class Generator {
 
   createItem() {}
 
-  dispatch() {
+  dispatch(): HTMLElement {
     return this.item.cloneNode(true);
   }
 };

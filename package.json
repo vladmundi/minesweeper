@@ -5,10 +5,10 @@
   "private": true,
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npm run clean && webpack",
+    "build": "npm run clean && npm run copy && webpack",
     "clean": "rm -rf dist",
-    "copy": "cp index.html dist/index.html && cp style.css dist/style.css",
-    "start": "npm run build && npm run copy && open 'dist/index.html'"
+    "copy": "mkdir dist && cp index.html dist/index.html && cp style.css dist/style.css",
+    "start": "npm run build && open 'dist/index.html'"
   },
   "repository": {
     "type": "git",

@@ -1,6 +1,11 @@
 const path = require('path');
 
 module.exports = {
+  watch: false,
+  watchOptions: {
+    aggregateTimeout: 300,
+    poll: 1000
+  },
   entry: './src/js/main.ts',
   module: {
     rules: [
