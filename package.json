@@ -8,7 +8,7 @@
     "build": "npm run clean && webpack",
     "clean": "rm -rf dist",
     "copy": "cp index.html dist/index.html && cp style.css dist/style.css",
-    "start": "npm run build && npm run copy && cd dist && http-server && cd .."
+    "start": "npm run build && npm run copy && open 'dist/index.html'"
   },
   "repository": {
     "type": "git",
@@ -26,7 +26,5 @@
     "webpack": "^4.39.2",
     "webpack-cli": "^3.3.6"
   },
-  "dependencies": {
-    "http-server": "^0.11.1"
-  }
+  "dependencies": {}
 }
