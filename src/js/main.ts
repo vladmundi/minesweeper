@@ -78,8 +78,12 @@ class Game {
 
     this.currentTarget = this.getTargetTile(e.target);
 
-    if (this.currentTarget && this.previousTarget) {
+    if (this.currentTarget) {
       this.currentTarget.symbol.classList.remove('-closed');
+    }
+
+    if (this.currentTarget !== this.previousTarget && this.previousTarget &&
+        !this.previousTarget.open) {
       this.previousTarget.symbol.classList.add('-closed');
     }
   }
