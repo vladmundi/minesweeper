@@ -15,9 +15,11 @@ class Game {
   resetButton = document.getElementById('reset-button');
   timer = 0;
   countdown: number = config.mines;
-  clickHandler = (e: EventWithTarget) => this.onClick(e);
   rightClickHandler = (e: EventWithTarget) => this.onRightClick(e);
   resetClickHandler = (e: Event) => this.onResetClick(e);
+  hoverHandler = (e: EventWithTarget) => this.hoverState(e);
+  mouseDownHandler = (e: EventWithTarget) => this.onMouseDown(e);
+  mouseUpHandler = (e: EventWithTarget) => this.onMouseUp(e);
   gameStarted = false;
   mineGenerator = new MineGenerator();
   flagGenerator = new FlagGenerator();
@@ -25,9 +27,62 @@ class Game {
   timerCtrl = new FancyNumberDisplay(this.timerDisplay);
   timerInterval: number;
   startTime: number;
+  mouseDown: boolean = false;
+  currentTarget: Tile;
+  previousTarget: Tile;
 
   constructor() {
     this.newGame();
+  }
+
+  onMouseDown(e: EventWithTarget) {
+    this.mouseDown = true;
+    this.currentTarget = this.getTargetTile(e.target);
+    if (this.currentTarget) {
+      this.currentTarget.symbol.classList.remove('-closed');
+    }
+  }
+
+  onMouseUp(e: EventWithTarget) {
+    this.mouseDown = false;
+    this.previousTarget = undefined;
+
+    const clickedTile = this.getTargetTile(e.target);
+    if (!clickedTile) return;
+
+    // Game start
+    if (!this.gameStarted) {
+      this.startGame(this.tiles.indexOf(clickedTile));
+      this.gameStarted = true;
+    }
+
+    // Game end
+    if (clickedTile.armed && clickedTile.flagged !== FlagType.FLAGGED) {
+      this.endGame(clickedTile);
+      this.stopTimer();
+      return;
+    };
+
+    this.openTile(clickedTile);
+    this.checkGameState();
+  }
+
+  hoverState(e: EventWithTarget) {
+    if (!this.mouseDown) return;
+
+    this.previousTarget =
+        !!this.currentTarget ? this.currentTarget : this.previousTarget;
+
+    this.currentTarget = this.getTargetTile(e.target);
+
+    if (this.currentTarget && this.previousTarget) {
+      this.currentTarget.symbol.classList.remove('-closed');
+      this.previousTarget.symbol.classList.add('-closed');
+    }
+  }
+
+  getTargetTile(target: HTMLElement): Tile {
+    return this.tiles.find(tile => tile.symbol === target);
   }
 
   newGame() {
@@ -42,6 +97,7 @@ class Game {
   onResetClick(e: Event) {
     this.world.innerHTML = '';
     this.stopTimer();
+    this.timer = 0;
     this.updateTimer();
     this.tiles = [];
     this.mines = [];
@@ -91,9 +147,11 @@ class Game {
     window.addEventListener('contextmenu', (e) => {
       e.preventDefault();
     });
-    this.world.addEventListener('click', this.clickHandler);
     this.world.addEventListener('contextmenu', this.rightClickHandler, false);
     this.resetButton.addEventListener('click', this.resetClickHandler);
+    this.world.addEventListener('mouseover', this.hoverHandler);
+    this.world.addEventListener('mousedown', this.mouseDownHandler);
+    this.world.addEventListener('mouseup', this.mouseUpHandler);
   }
 
   startGame(clickedTileId: number) {
@@ -113,27 +171,6 @@ class Game {
 
   stopTimer() {
     clearInterval(this.timerInterval);
-  }
-
-  onClick(e: EventWithTarget) {
-    const clickedTile = this.tiles.find(tile => tile.symbol === e.target);
-    if (!clickedTile) return;
-
-    // Game start
-    if (!this.gameStarted) {
-      this.startGame(this.tiles.indexOf(clickedTile));
-      this.gameStarted = true;
-    }
-
-    // Game end
-    if (clickedTile.armed && clickedTile.flagged !== FlagType.FLAGGED) {
-      this.endGame(clickedTile);
-      this.stopTimer();
-      return;
-    };
-
-    this.openTile(clickedTile);
-    this.checkGameState();
   }
 
   checkGameState() {
@@ -163,7 +200,7 @@ class Game {
   }
 
   onRightClick(e: EventWithTarget) {
-    const clickedTile = this.tiles.find(tile => tile.symbol === e.target);
+    const clickedTile = this.getTargetTile(e.target);
     if (!clickedTile) return;
 
     this.flagTile(clickedTile);
@@ -285,7 +322,6 @@ class Game {
   }
 
   removeInteraction() {
-    this.world.removeEventListener('click', this.clickHandler);
     this.world.removeEventListener('contextmenu', this.rightClickHandler);
   }
 
