@@ -17,7 +17,8 @@ class Game {
   timer = 0;
   countdown: number = config.mines;
   rightClickHandler = (e: EventWithTarget) => this.onRightClick(e);
-  resetClickHandler = (e: Event) => this.onResetClick(e);
+  resetUpHandler = (e: Event) => this.onResetUp(e);
+  resetDownHandler = (e: Event) => this.onResetDown(e);
   hoverHandler = (e: EventWithTarget) => this.hoverState(e);
   mouseDownHandler = (e: EventWithTarget) => this.onMouseDown(e);
   mouseUpHandler = (e: EventWithTarget) => this.onMouseUp(e);
@@ -101,13 +102,18 @@ class Game {
     this.resize();
   }
 
-  onResetClick(e: Event) {
+  onResetDown(e: Event) {
+    this.resetButton.classList.add('active');
+  }
+
+  onResetUp(e: Event) {
     this.world.innerHTML = '';
     this.stopTimer();
     this.timer = 0;
     this.updateTimer();
     this.tiles = [];
     this.mines = [];
+    this.resetButton.classList.remove('active');
     this.smiley.classList.remove('dead');
     this.countdown = config.mines;
     this.gameStarted = false;
@@ -156,7 +162,8 @@ class Game {
       e.preventDefault();
     });
     this.world.addEventListener('contextmenu', this.rightClickHandler, false);
-    this.resetButton.addEventListener('click', this.resetClickHandler);
+    this.resetButton.addEventListener('mouseup', this.resetUpHandler);
+    this.resetButton.addEventListener('mousedown', this.resetDownHandler);
     this.world.addEventListener('mouseover', this.hoverHandler);
     this.world.addEventListener('mousedown', this.mouseDownHandler);
     this.world.addEventListener('mouseup', this.mouseUpHandler);

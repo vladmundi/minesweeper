@@ -1,8 +1,8 @@
 html {
   --background-dark: #888888;
-  --background-light: #e0e0e0;
+  --background-light: #bdbdbd;
   --border-light: #ffffff;
-  --border-dark: #bdbdbd;
+  --border-dark: #7b7b7b;
 }
 
 body {
@@ -75,6 +75,14 @@ body {
   border-left-color: var(--border-light);
   border-right-color: var(--border-dark);
   border-top-color: var(--border-light);
+}
+
+.reset-button.active {
+  background: var(--background-light);
+  border-bottom-color: var(--border-light);
+  border-left-color: var(--border-dark);
+  border-right-color: var(--border-light);
+  border-top-color: var(--border-dark);
 }
 
 .tile.-cross::after,
