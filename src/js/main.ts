@@ -104,6 +104,7 @@ class Game {
     this.updateTimer();
     this.tiles = [];
     this.mines = [];
+    this.smiley.classList.remove('dead');
     this.countdown = config.mines;
     this.gameStarted = false;
     this.newGame();
@@ -308,6 +309,8 @@ class Game {
   endGame(tile: Tile) {
     tile.symbol.style.background = 'red';
 
+    this.smiley.classList.add('dead');
+
     this.tiles.forEach(tile => {
       const nonMarked = tile.armed && tile.flagged !== FlagType.FLAGGED;
       const wronglyMarked = !tile.armed && tile.flagged === FlagType.FLAGGED;
@@ -325,6 +328,8 @@ class Game {
   }
 
   removeInteraction() {
+    this.world.removeEventListener('mousedown', this.mouseDownHandler);
+    this.world.removeEventListener('mouseup', this.mouseUpHandler);
     this.world.removeEventListener('contextmenu', this.rightClickHandler);
   }
 

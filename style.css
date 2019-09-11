@@ -135,8 +135,15 @@ body {
 
 .smiley.dead::after,
 .smiley.dead::before {
-  content: 'x';
+  align-items: center;
+  background: none;
   border: none;
+  content: 'x';
+  display: flex;
+  font-family: fantasy;
+  font-size: 40px;
+  justify-content: center;
+  line-height: 0;
 }
 
 .smiley::after {
@@ -150,6 +157,12 @@ body {
   height: 40%;
   position: relative;
   width: 40%;
+}
+
+.smiley.dead .smile {
+  border-color: transparent;
+  border-top-color: black;
+  top: 28px;
 }
 
 .smiley.anticipation .smile {
