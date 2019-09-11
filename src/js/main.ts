@@ -13,6 +13,7 @@ class Game {
   timerDisplay = document.getElementById('timer');
   countdownDisplay = document.getElementById('countdown');
   resetButton = document.getElementById('reset-button');
+  smiley = document.getElementsByClassName('smiley')[0];
   timer = 0;
   countdown: number = config.mines;
   rightClickHandler = (e: EventWithTarget) => this.onRightClick(e);
@@ -39,6 +40,7 @@ class Game {
     this.mouseDown = true;
     this.currentTarget = this.getTargetTile(e.target);
     if (this.currentTarget) {
+      this.smiley.classList.add('anticipation');
       this.currentTarget.symbol.classList.remove('-closed');
     }
   }
@@ -46,6 +48,7 @@ class Game {
   onMouseUp(e: EventWithTarget) {
     this.mouseDown = false;
     this.previousTarget = undefined;
+    this.smiley.classList.remove('anticipation');
 
     const clickedTile = this.getTargetTile(e.target);
     if (!clickedTile) return;
