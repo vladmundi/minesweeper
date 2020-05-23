@@ -38,15 +38,22 @@ class Game {
   }
 
   onMouseDown(e: EventWithTarget) {
+    if (e.button === 2) {
+      this.rightClickHandler(e);
+      return;
+    }
     this.mouseDown = true;
     this.currentTarget = this.getTargetTile(e.target);
-    if (this.currentTarget) {
+    if (this.currentTarget && this.currentTarget.flagged !== FlagType.FLAGGED) {
       this.smiley.classList.add('anticipation');
       this.currentTarget.symbol.classList.remove('-closed');
     }
   }
 
   onMouseUp(e: EventWithTarget) {
+    if (e.button === 2) {
+      return;
+    }
     this.mouseDown = false;
     this.previousTarget = undefined;
     this.smiley.classList.remove('anticipation');
@@ -80,7 +87,12 @@ class Game {
     this.currentTarget = this.getTargetTile(e.target);
 
     if (this.currentTarget) {
-      this.currentTarget.symbol.classList.remove('-closed');
+      if (this.currentTarget.flagged !== FlagType.FLAGGED) {
+        this.smiley.classList.add('anticipation');
+        this.currentTarget.symbol.classList.remove('-closed');
+      } else {
+        this.smiley.classList.remove('anticipation');
+      }
     }
 
     if (this.currentTarget !== this.previousTarget && this.previousTarget &&
@@ -161,7 +173,6 @@ class Game {
     window.addEventListener('contextmenu', (e) => {
       e.preventDefault();
     });
-    this.world.addEventListener('contextmenu', this.rightClickHandler, false);
     this.resetButton.addEventListener('mouseup', this.resetUpHandler);
     this.resetButton.addEventListener('mousedown', this.resetDownHandler);
     this.world.addEventListener('mouseover', this.hoverHandler);

@@ -1,4 +1,4 @@
-export interface EventWithTarget extends Event {
+export interface EventWithTarget extends MouseEvent {
   target: HTMLElement;
 }
 
