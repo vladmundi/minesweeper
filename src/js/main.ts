@@ -44,7 +44,7 @@ class Game {
     }
     this.mouseDown = true;
     this.currentTarget = this.getTargetTile(e.target);
-    if (this.currentTarget && this.currentTarget.flagged !== FlagType.FLAGGED) {
+    if (this.currentTarget && this.currentTarget.flagged !== FlagType.FLAGGED && !this.currentTarget.open) {
       this.smiley.classList.add('anticipation');
       this.currentTarget.symbol.classList.remove('-closed');
     }
@@ -87,7 +87,7 @@ class Game {
     this.currentTarget = this.getTargetTile(e.target);
 
     if (this.currentTarget) {
-      if (this.currentTarget.flagged !== FlagType.FLAGGED) {
+      if (this.currentTarget.flagged !== FlagType.FLAGGED && !this.currentTarget.open) {
         this.smiley.classList.add('anticipation');
         this.currentTarget.symbol.classList.remove('-closed');
       } else {
