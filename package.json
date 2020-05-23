@@ -8,7 +8,7 @@
     "build": "npm run clean && npm run copy && webpack",
     "clean": "rm -rf dist",
     "copy": "mkdir dist && cp index.html dist/index.html && cp style.css dist/style.css",
-    "start": "npm run build && open 'dist/index.html'"
+    "start": "npm run build && start dist/index.html"
   },
   "repository": {
     "type": "git",
@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/vladmundi/minesweeper#readme",
   "devDependencies": {
+    "copy-webpack-plugin": "^6.0.1",
     "ts-loader": "^6.2.2",
     "typescript": "^3.9.3",
     "webpack": "^4.43.0",
