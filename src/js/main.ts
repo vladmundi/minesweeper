@@ -127,6 +127,7 @@ class Game {
     this.mines = [];
     this.resetButton.classList.remove('active');
     this.smiley.classList.remove('dead');
+    this.smiley.classList.remove('win');
     this.countdown = config.mines;
     this.gameStarted = false;
     this.newGame();
