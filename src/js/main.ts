@@ -200,11 +200,12 @@ class Game {
   }
 
   checkGameState() {
-    // Let's see if there is anything up here
+    // Basically a win game scenario
     const armedTiles = this.tiles.filter(tile => tile.armed);
     const closedTiles = this.tiles.filter(tile => !tile.open);
     if (armedTiles.length === closedTiles.length) {
       armedTiles.forEach(tile => this.flagTile(tile, true));
+      this.smiley.classList.add('win');
       this.removeInteraction();
       this.stopTimer();
     }

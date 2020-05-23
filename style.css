@@ -153,6 +153,24 @@ body {
   line-height: 0;
 }
 
+.smiley.win::after {
+  align-items: center;
+  background: none;
+  border: none;
+  content: '\01F576';
+  display: flex;
+  font-size: 60px;
+  height: 100%;
+  justify-content: center;
+  margin: 0;
+  top: 0;
+  transform: translateY(-7px);
+}
+
+.smiley.win::before {
+  content: '';
+}
+
 .smiley::after {
   margin-left: 15px;
 }
