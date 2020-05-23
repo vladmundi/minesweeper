@@ -146,9 +146,8 @@ body {
   align-items: center;
   background: none;
   border: none;
-  content: 'x';
+  content: '\00D7';
   display: flex;
-  font-family: fantasy;
   font-size: 40px;
   justify-content: center;
   line-height: 0;
