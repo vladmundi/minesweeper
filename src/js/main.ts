@@ -220,6 +220,7 @@ class Game {
 
     if (tile.proximity) {
       tile.symbol.innerHTML = tile.proximity.toString();
+      tile.symbol.style.color = IndicatorColors[tile.proximity - 1];
     } else {
       this.getAdjacentTiles(idx).forEach(tile => this.openTile(tile));
     }
@@ -322,9 +323,6 @@ class Game {
           iteratedTile.proximity++;
         }
       });
-
-      iteratedTile.symbol.style.color =
-          IndicatorColors[iteratedTile.proximity - 1];
     }
   }
 
