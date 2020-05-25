@@ -1,16 +1,16 @@
 # HTML Minesweeper Lite
 
-Even more amazing now, webpack bundled js/html/css implementation of minesweeper.
+Even more amazing now, webpack bundled ts/html/css implementation of minesweeper.
+
+## Live version
+
+http://vladmundi.xyz/minesweeper/index.html
 
 ## Features
 
-Play the classic 10 x 10 grid, 10 mines minesweeper.
+Play the classic 9 x 9 grid, 10 mines minesweeper.
 
-~Restart the game by refreshing the page... (so fresh!)~
-The smiley is here! Reset the game by clicking on it!
-
-### TODOS
-Animate the smiley, needs more oomph!
+Configuration window coming soon!
 
 ## Start
 
