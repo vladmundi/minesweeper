@@ -53,7 +53,7 @@ class Game {
   }
 
   onMouseUp(e: EventWithTarget) {
-    if (e.button === 2) {
+    if (e.button === 2 || !this.mouseDown) {
       return;
     }
     this.mouseDown = false;
