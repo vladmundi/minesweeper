@@ -1,7 +1,7 @@
 export const tileConfig = {
   gap: 4,
   border: 7,
-  size: 50,
+  size: 54,
 }
 
 export const presetDifficulties = {

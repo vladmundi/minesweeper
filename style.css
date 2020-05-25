@@ -271,7 +271,7 @@ body {
 .flag::after {
   border: 12px solid transparent;
   border-right: 20px solid red;
-  right: 22px;
+  right: 24px;
   top: 2px;
 }
 
