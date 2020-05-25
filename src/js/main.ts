@@ -1,9 +1,9 @@
-import {config} from './config';
+import {tileConfig, presetDifficulties} from './config';
 import {FlagType, IndicatorColors} from './constants';
 import {FancyNumberDisplay} from './fancyNumberDisplay';
 import {FlagGenerator} from './generators/flagGenerator';
 import {MineGenerator} from './generators/mineGenerator';
-import {EventWithTarget, Tile} from './types';
+import {EventWithTarget, Tile, GameConfig} from './types';
 
 
 class Game {
@@ -15,7 +15,7 @@ class Game {
   resetButton = document.getElementById('reset-button');
   smiley = document.getElementsByClassName('smiley')[0];
   timer = 0;
-  countdown: number = config.mines;
+  countdown: number = 0;
   rightClickHandler = (e: EventWithTarget) => this.onRightClick(e);
   resetUpHandler = (e: Event) => this.onResetUp(e);
   resetDownHandler = (e: Event) => this.onResetDown(e);
@@ -32,8 +32,10 @@ class Game {
   mouseDown: boolean = false;
   currentTarget: Tile;
   previousTarget: Tile;
+  gameConfig: GameConfig;
 
   constructor() {
+    this.gameConfig = presetDifficulties.beginner;
     this.newGame();
   }
 
@@ -106,6 +108,7 @@ class Game {
   }
 
   newGame() {
+    this.countdown = this.gameConfig.mines;
     this.drawMap();
     this.initResetButton();
     this.setUpInteraction();
@@ -128,13 +131,13 @@ class Game {
     this.resetButton.classList.remove('active');
     this.smiley.classList.remove('dead');
     this.smiley.classList.remove('win');
-    this.countdown = config.mines;
+    this.countdown = this.gameConfig.mines;
     this.gameStarted = false;
     this.newGame();
   }
 
   initResetButton() {
-    this.resetButton.style.borderWidth = `${config.tileBorder}px`;
+    this.resetButton.style.borderWidth = `${tileConfig.border}px`;
   }
 
   resize() {
@@ -271,20 +274,20 @@ class Game {
   }
 
   drawMap() {
-    const tileSize = config.tileSize + config.tileBorder * 2 + config.tileGap;
-    this.world.style.width = `${config.size.x * tileSize + config.tileGap}px`;
-    this.world.style.height = `${config.size.y * tileSize + config.tileGap}px`;
-    for (var i = 0, il = config.size.x * config.size.y; i < il; i++) {
+    const tileSize = tileConfig.size + tileConfig.border * 2 + tileConfig.gap;
+    this.world.style.width = `${this.gameConfig.size.x * tileSize + tileConfig.gap}px`;
+    this.world.style.height = `${this.gameConfig.size.y * tileSize + tileConfig.gap}px`;
+    for (var i = 0, il = this.gameConfig.size.x * this.gameConfig.size.y; i < il; i++) {
       const tile = document.createElement('DIV');
       tile.classList.add('tile', '-closed');
       tile.id = `${i}`;
 
-      tile.style.height = `${config.tileSize}px`;
-      tile.style.width = `${config.tileSize}px`;
-      tile.style.borderWidth = `${config.tileBorder}px`;
+      tile.style.height = `${tileConfig.size}px`;
+      tile.style.width = `${tileConfig.size}px`;
+      tile.style.borderWidth = `${tileConfig.border}px`;
 
-      tile.style.marginTop = `${config.tileGap}px`;
-      tile.style.marginLeft = `${config.tileGap}px`;
+      tile.style.marginTop = `${tileConfig.gap}px`;
+      tile.style.marginLeft = `${tileConfig.gap}px`;
 
       this.tiles.push({
         armed: false,
@@ -302,8 +305,8 @@ class Game {
     const nonArmedTileIds: Array<number> =
         this.getAdjacentTiles(clickedTileId)
             .map(tile => parseInt(tile.symbol.id));
-    while (this.mines.length < config.mines) {
-      let place = Math.floor(Math.random() * config.size.x * config.size.y);
+    while (this.mines.length < this.gameConfig.mines) {
+      let place = Math.floor(Math.random() * this.gameConfig.size.x * this.gameConfig.size.y);
 
       if (this.tiles[place].armed || place === clickedTileId) continue;
       if (nonArmedTileIds.includes(place)) {
@@ -311,13 +314,12 @@ class Game {
       }
 
       this.tiles[place].armed = true;
-      // this.tiles[place].symbol.style.background = 'orange';
       this.mines.push(place);
     }
   }
 
   updateIndicators() {
-    for (var i = 0, il = config.size.x * config.size.y; i < il; i++) {
+    for (var i = 0, il = this.gameConfig.size.x * this.gameConfig.size.y; i < il; i++) {
       const iteratedTile = this.tiles[i];
 
       this.getAdjacentTiles(i).forEach(tile => {
@@ -358,20 +360,20 @@ class Game {
   getAdjacentTiles(id: number) {
     // Top tiles
     const topTiles = [
-      id % config.size.x ? this.tiles[id - config.size.x - 1] : undefined,
-      this.tiles[id - config.size.x],
-      (id + 1) % config.size.x ? this.tiles[id - config.size.x + 1] : undefined,
+      id % this.gameConfig.size.x ? this.tiles[id - this.gameConfig.size.x - 1] : undefined,
+      this.tiles[id - this.gameConfig.size.x],
+      (id + 1) % this.gameConfig.size.x ? this.tiles[id - this.gameConfig.size.x + 1] : undefined,
     ];
 
     const sideTiles = [
-      id % config.size.x ? this.tiles[id - 1] : undefined,
-      (id + 1) % config.size.x ? this.tiles[id + 1] : undefined,
+      id % this.gameConfig.size.x ? this.tiles[id - 1] : undefined,
+      (id + 1) % this.gameConfig.size.x ? this.tiles[id + 1] : undefined,
     ];
 
     const bottomTiles = [
-      id % config.size.x ? this.tiles[id + config.size.x - 1] : undefined,
-      this.tiles[id + config.size.x],
-      (id + 1) % config.size.x ? this.tiles[id + config.size.x + 1] : undefined,
+      id % this.gameConfig.size.x ? this.tiles[id + this.gameConfig.size.x - 1] : undefined,
+      this.tiles[id + this.gameConfig.size.x],
+      (id + 1) % this.gameConfig.size.x ? this.tiles[id + this.gameConfig.size.x + 1] : undefined,
     ];
 
     return [...topTiles, ...sideTiles, ...bottomTiles].filter(a => a);

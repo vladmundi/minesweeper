@@ -1,10 +1,29 @@
-export const config = {
-  size: {
-    x: 10,
-    y: 10,
+export const tileConfig = {
+  gap: 4,
+  border: 7,
+  size: 50,
+}
+
+export const presetDifficulties = {
+  beginner: {
+    size: {
+      x: 9,
+      y: 9,
+    },
+    mines: 10,
   },
-  tileGap: 4,
-  mines: 10,
-  tileBorder: 7,
-  tileSize: 50,
+  intermediate: {
+    size: {
+      x: 16,
+      y: 16,
+    },
+    mines: 40,
+  },
+  expert: {
+    size: {
+      x: 30,
+      y: 16,
+    },
+    mines: 99,
+  }
 }
