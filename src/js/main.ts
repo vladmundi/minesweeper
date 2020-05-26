@@ -1,5 +1,5 @@
 import {tileConfig, presetDifficulties} from './config';
-import {FlagType, IndicatorColors} from './constants';
+import {FlagType, IndicatorColors, MouseButton} from './constants';
 import {FancyNumberDisplay} from './fancyNumberDisplay';
 import {FlagGenerator} from './generators/flagGenerator';
 import {MineGenerator} from './generators/mineGenerator';

@@ -9,8 +9,10 @@ body {
   align-items: center;
   background: var(--background-dark);
   display: flex;
+  height: 100%;
   justify-content: center;
   margin: 0;
+  width: 100%;
 }
 
 .hud,
@@ -38,7 +40,7 @@ body {
   display: flex;
   flex-direction: column;
   padding: 20px;
-  transform-origin: top center;
+  transform-origin: center;
 }
 
 .hud,
@@ -338,7 +340,10 @@ body {
   transform: rotate(-90deg) translate(-90px, -30px);
 }
 
-.dash-3 {}
+/*
+  not needed since it's the default position of the element;
+ .dash-3 {}
+*/
 
 .dash-4 {
   height: 12px;
