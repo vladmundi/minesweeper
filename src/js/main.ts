@@ -7,44 +7,123 @@ import {EventWithTarget, Tile, GameConfig} from './types';
 
 
 class Game {
+  // Game element arrays
   tiles: Array<Tile> = [];
   mines: Array<number> = [];
+
+  // Markup references
   world = document.getElementById('world');
   timerDisplay = document.getElementById('timer');
   countdownDisplay = document.getElementById('countdown');
   resetButton = document.getElementById('reset-button');
   smiley = document.getElementsByClassName('smiley')[0];
-  timer = 0;
-  countdown: number = 0;
-  rightClickHandler = (e: EventWithTarget) => this.onRightClick(e);
-  resetUpHandler = (e: Event) => this.onResetUp(e);
-  resetDownHandler = (e: Event) => this.onResetDown(e);
-  hoverHandler = (e: EventWithTarget) => this.hoverState(e);
-  mouseDownHandler = (e: EventWithTarget) => this.onMouseDown(e);
-  mouseUpHandler = (e: EventWithTarget) => this.onMouseUp(e);
-  gameStarted = false;
+
+  // Generators
   mineGenerator = new MineGenerator();
   flagGenerator = new FlagGenerator();
+
+  // Numeric display controls
   countDownCtrl = new FancyNumberDisplay(this.countdownDisplay);
   timerCtrl = new FancyNumberDisplay(this.timerDisplay);
+
+  // Game state values
+  timer = 0;
+  countdown = 0;
+  gameStarted = false;
   timerInterval: number;
   startTime: number;
-  mouseDown: boolean = false;
+  middleDown = false;
+  mouseDown = false;
+  rightDown = false;
+  resetDown = false;
   currentTarget: Tile;
   previousTarget: Tile;
   gameConfig: GameConfig;
+  gameReady = false;
+
+  // Intermediate states
+  tempRevealedTiles: Array<Tile> = [];
 
   constructor() {
     this.gameConfig = presetDifficulties.beginner;
+    this.resetButton.style.borderWidth = `${tileConfig.border}px`;
+    this.setUpInteraction();
     this.newGame();
+    this.resize();
   }
 
   onMouseDown(e: EventWithTarget) {
-    if (e.button === 2) {
-      this.rightClickHandler(e);
-      return;
+    if (!this.gameReady) return;
+
+    switch(e.button) {
+      case MouseButton.LEFT:
+        this.mouseDown = true;
+        if (!this.middleDown && !this.rightDown) this.onRightMouseDown(e);
+        break;
+
+      case MouseButton.MIDDLE:
+        this.middleDown = true;
+        this.onMiddleDown(e);
+        break;
+
+      case MouseButton.RIGHT:
+        this.rightDown = true;
+        if (!this.middleDown && !this.mouseDown) this.onRightClick(e);
+        break;
+
+      default:
+        return;
     }
-    this.mouseDown = true;
+
+    if (this.mouseDown && this.rightDown) {
+      this.middleDown = true;
+      this.onMiddleDown(e);
+    }
+  }
+
+  onMouseUp(e: EventWithTarget) {
+    switch(e.button) {
+      case MouseButton.LEFT:
+        if (!this.middleDown && !this.rightDown) this.onLeftMouseUp(e);
+        break;
+
+      case MouseButton.MIDDLE:
+        this.onMiddleUp(e);
+        break;
+
+      case MouseButton.RIGHT:
+        return;
+
+      default:
+        return;
+    }
+
+    if (this.mouseDown && this.rightDown) {
+      this.onMiddleUp(e);
+    }
+
+    setTimeout(() => {
+      this.mouseDown = false;
+      this.middleDown = false;
+      this.rightDown = false;
+    }, 50);
+  }
+
+  onMiddleUp(e: EventWithTarget) {
+    this.tempRevealedTiles.forEach((tile) => tile.symbol.classList.add('-closed'));
+  }
+
+  onMiddleDown(e: EventWithTarget) {
+    this.currentTarget = this.getTargetTile(e.target);
+    const idx = this.tiles.indexOf(this.currentTarget);
+    this.currentTarget.symbol.classList.remove('-closed');
+    const adjascent = this.getAdjacentTiles(idx);
+    adjascent.push(this.currentTarget);
+    this.tempRevealedTiles = adjascent.filter((tile) => !tile.open);
+    this.tempRevealedTiles.forEach(tile => tile.symbol.classList.remove('-closed'));
+  }
+
+  onRightMouseDown(e: EventWithTarget) {
     this.currentTarget = this.getTargetTile(e.target);
     if (this.currentTarget && this.currentTarget.flagged !== FlagType.FLAGGED && !this.currentTarget.open) {
       this.smiley.classList.add('anticipation');
@@ -52,16 +131,22 @@ class Game {
     }
   }
 
-  onMouseUp(e: EventWithTarget) {
-    if (e.button === 2 || !this.mouseDown) {
-      return;
+  onLeftMouseUp(e: EventWithTarget) {
+    const clickedTile = this.getTargetTile(e.target);
+    if (!clickedTile) {
+      if (e.target === this.resetButton) {
+        this.onResetUp();
+      }
+    } else {
+      this.tileClick(clickedTile);
     }
-    this.mouseDown = false;
+  }
+
+  tileClick(clickedTile: Tile) {
+    if (!this.mouseDown || !this.gameReady) return;
+
     this.previousTarget = undefined;
     this.smiley.classList.remove('anticipation');
-
-    const clickedTile = this.getTargetTile(e.target);
-    if (!clickedTile) return;
 
     // Game start
     if (!this.gameStarted) {
@@ -72,7 +157,6 @@ class Game {
     // Game end
     if (clickedTile.armed && clickedTile.flagged !== FlagType.FLAGGED) {
       this.endGame(clickedTile);
-      this.stopTimer();
       return;
     };
 
@@ -110,18 +194,30 @@ class Game {
   newGame() {
     this.countdown = this.gameConfig.mines;
     this.drawMap();
-    this.initResetButton();
-    this.setUpInteraction();
     this.updateCountdown();
     this.updateTimer();
-    this.resize();
+    this.gameReady = true;
   }
 
-  onResetDown(e: Event) {
+  onResetDown(e: MouseEvent) {
+    if (e.button === MouseButton.RIGHT) return;
+    this.resetDown = true;
     this.resetButton.classList.add('active');
   }
 
-  onResetUp(e: Event) {
+  onResetOver() {
+    if (this.resetDown) {
+      this.resetButton.classList.add('active');
+    }
+  }
+
+  onResetUp() {
+    if (!this.resetDown) return;
+    this.resetGame();
+    this.newGame();
+  }
+
+  resetGame() {
     this.world.innerHTML = '';
     this.stopTimer();
     this.timer = 0;
@@ -133,11 +229,6 @@ class Game {
     this.smiley.classList.remove('win');
     this.countdown = this.gameConfig.mines;
     this.gameStarted = false;
-    this.newGame();
-  }
-
-  initResetButton() {
-    this.resetButton.style.borderWidth = `${tileConfig.border}px`;
   }
 
   resize() {
@@ -174,14 +265,22 @@ class Game {
   }
 
   setUpInteraction() {
-    window.addEventListener('contextmenu', (e) => {
-      e.preventDefault();
+    const window = document.querySelector('.window');
+    window.addEventListener('contextmenu', (e) => e.preventDefault());
+    window.addEventListener('mousedown', (e: MouseEvent) => {
+      if (e.button === MouseButton.MIDDLE) {
+        e.preventDefault();
+      }
     });
-    this.resetButton.addEventListener('mouseup', this.resetUpHandler);
-    this.resetButton.addEventListener('mousedown', this.resetDownHandler);
-    this.world.addEventListener('mouseover', this.hoverHandler);
-    this.world.addEventListener('mousedown', this.mouseDownHandler);
-    this.world.addEventListener('mouseup', this.mouseUpHandler);
+
+    this.resetButton.addEventListener('mousedown', (e: MouseEvent) => this.onResetDown(e));
+    this.resetButton.addEventListener('mouseleave', () => this.resetButton.classList.remove('active'));
+    this.resetButton.addEventListener('mouseover', () => this.onResetOver());
+
+    this.world.addEventListener('mouseover', (e: EventWithTarget) => this.hoverState(e));
+    this.world.addEventListener('mousedown', (e: EventWithTarget) => this.onMouseDown(e));
+
+    document.body.addEventListener('mouseup', (e: EventWithTarget) => this.onMouseUp(e));
   }
 
   startGame(clickedTileId: number) {
@@ -194,7 +293,7 @@ class Game {
     this.timer = 0;
     this.startTime = new Date().getTime();
     this.timerInterval = setInterval(() => {
-      this.timer = ~~((new Date().getTime() - this.startTime) / 1000);
+      this.timer = Math.floor((new Date().getTime() - this.startTime) / 1000);
       this.updateTimer();
     }, 1000);
   }
@@ -210,8 +309,8 @@ class Game {
     if (armedTiles.length === closedTiles.length) {
       armedTiles.forEach(tile => this.flagTile(tile, true));
       this.smiley.classList.add('win');
-      this.removeInteraction();
       this.stopTimer();
+      this.gameReady = false;
     }
   }
 
@@ -347,14 +446,8 @@ class Game {
       }
     });
 
-    this.removeInteraction();
-    // alert('Game over');
-  }
-
-  removeInteraction() {
-    this.world.removeEventListener('mousedown', this.mouseDownHandler);
-    this.world.removeEventListener('mouseup', this.mouseUpHandler);
-    this.world.removeEventListener('contextmenu', this.rightClickHandler);
+    this.stopTimer();
+    this.gameReady = false;
   }
 
   getAdjacentTiles(id: number) {
