@@ -33,7 +33,7 @@ class Game {
   timerInterval: number;
   startTime: number;
   middleDown = false;
-  mouseDown = false;
+  leftDown = false;
   rightDown = false;
   resetDown = false;
   currentTarget: Tile;
@@ -43,6 +43,7 @@ class Game {
 
   // Intermediate states
   tempRevealedTiles: Array<Tile> = [];
+  adjascentTiles: Array<Tile> = [];
 
   constructor() {
     this.gameConfig = presetDifficulties.beginner;
@@ -57,31 +58,33 @@ class Game {
 
     switch(e.button) {
       case MouseButton.LEFT:
-        this.mouseDown = true;
-        if (!this.middleDown && !this.rightDown) this.onRightMouseDown(e);
+        this.leftDown = true;
+        if (!this.middleDown && !this.rightDown) this.onLeftMouseDown(e);
         break;
 
       case MouseButton.MIDDLE:
         this.middleDown = true;
-        this.onMiddleDown(e);
+        this.onMiddleMouseDown(e);
         break;
 
       case MouseButton.RIGHT:
         this.rightDown = true;
-        if (!this.middleDown && !this.mouseDown) this.onRightClick(e);
+        if (!this.middleDown && !this.leftDown) this.onRightMouseDown(e);
         break;
 
       default:
         return;
     }
 
-    if (this.mouseDown && this.rightDown) {
+    if (this.leftDown && this.rightDown) {
       this.middleDown = true;
-      this.onMiddleDown(e);
+      this.onMiddleMouseDown(e);
     }
   }
 
   onMouseUp(e: EventWithTarget) {
+    if (!this.gameReady) return;
+
     switch(e.button) {
       case MouseButton.LEFT:
         if (!this.middleDown && !this.rightDown) this.onLeftMouseUp(e);
@@ -92,81 +95,56 @@ class Game {
         break;
 
       case MouseButton.RIGHT:
-        return;
+        break;
 
       default:
         return;
     }
 
-    if (this.mouseDown && this.rightDown) {
+    if (this.leftDown && this.rightDown) {
       this.onMiddleUp(e);
     }
 
+    // This is dodgy but will do for the time being...
     setTimeout(() => {
-      this.mouseDown = false;
-      this.middleDown = false;
+      this.leftDown = false;
       this.rightDown = false;
     }, 50);
   }
 
-  onMiddleUp(e: EventWithTarget) {
-    this.tempRevealedTiles.forEach((tile) => tile.symbol.classList.add('-closed'));
+  onMouseOver(e: EventWithTarget) {
+    if (this.leftDown && !this.rightDown) this.onLeftMouseOver(e);
+    if (this.middleDown || (this.leftDown && this.rightDown)) this.onMiddleMouseOver(e);
+    if (this.rightDown && !this.leftDown) console.log('TODO: enable multiple flagging?');
   }
 
-  onMiddleDown(e: EventWithTarget) {
+  onMiddleMouseOver(e: EventWithTarget) {
+    if (!this.middleDown) return; // Gotta love them race conditions...
     this.currentTarget = this.getTargetTile(e.target);
     const idx = this.tiles.indexOf(this.currentTarget);
-    this.currentTarget.symbol.classList.remove('-closed');
-    const adjascent = this.getAdjacentTiles(idx);
-    adjascent.push(this.currentTarget);
-    this.tempRevealedTiles = adjascent.filter((tile) => !tile.open);
+
+    // unreveal tiles
+    this.tempRevealedTiles.forEach(tile => tile.symbol.classList.add('-closed'));
+
+    // Store current adjascentTiles references
+    this.adjascentTiles = this.getAdjacentTiles(idx);
+
+    // get potentially temporary revealed tiles
+    const revealTiles = [...this.adjascentTiles, this.currentTarget];
+
+    // filter out the non qualified for temporary reveal tiles
+    this.tempRevealedTiles = revealTiles.filter((tile) => !tile.open && tile.flagged != FlagType.FLAGGED);
+    // reveal em!
     this.tempRevealedTiles.forEach(tile => tile.symbol.classList.remove('-closed'));
-  }
 
-  onRightMouseDown(e: EventWithTarget) {
-    this.currentTarget = this.getTargetTile(e.target);
-    if (this.currentTarget && this.currentTarget.flagged !== FlagType.FLAGGED && !this.currentTarget.open) {
+    if (this.tempRevealedTiles.length) {
       this.smiley.classList.add('anticipation');
-      this.currentTarget.symbol.classList.remove('-closed');
-    }
-  }
-
-  onLeftMouseUp(e: EventWithTarget) {
-    const clickedTile = this.getTargetTile(e.target);
-    if (!clickedTile) {
-      if (e.target === this.resetButton) {
-        this.onResetUp();
-      }
     } else {
-      this.tileClick(clickedTile);
+      this.smiley.classList.remove('anticipation');
     }
   }
 
-  tileClick(clickedTile: Tile) {
-    if (!this.mouseDown || !this.gameReady) return;
-
-    this.previousTarget = undefined;
-    this.smiley.classList.remove('anticipation');
-
-    // Game start
-    if (!this.gameStarted) {
-      this.startGame(this.tiles.indexOf(clickedTile));
-      this.gameStarted = true;
-    }
-
-    // Game end
-    if (clickedTile.armed && clickedTile.flagged !== FlagType.FLAGGED) {
-      this.endGame(clickedTile);
-      return;
-    };
-
-    this.openTile(clickedTile);
-    this.checkGameState();
-  }
-
-  hoverState(e: EventWithTarget) {
-    if (!this.mouseDown) return;
-
+  onLeftMouseOver(e: EventWithTarget) {
     this.previousTarget =
         !!this.currentTarget ? this.currentTarget : this.previousTarget;
 
@@ -185,6 +163,87 @@ class Game {
         !this.previousTarget.open) {
       this.previousTarget.symbol.classList.add('-closed');
     }
+  }
+
+  onMiddleUp(e: EventWithTarget) {
+    this.middleDown = false;
+    const target = this.getTargetTile(e.target);
+    if (target && target.open && target.proximity) {
+      // amount of tiles that are in proximity and flagged
+      const flaggedTilesAmount = this.adjascentTiles.filter((tile) => tile.flagged === FlagType.FLAGGED).length;
+      if (flaggedTilesAmount === target.proximity) {
+        this.adjascentTiles.forEach((tile) => this.tileClick(tile));
+        this.smiley.classList.remove('anticipation');
+        return;
+      }
+    }
+    this.tempRevealedTiles.forEach((tile) => tile.symbol.classList.add('-closed'));
+    this.smiley.classList.remove('anticipation');
+  }
+
+  onMiddleMouseDown(e: EventWithTarget) {
+    this.currentTarget = this.getTargetTile(e.target);
+    const idx = this.tiles.indexOf(this.currentTarget);
+
+    // Store current adjascentTiles references
+    this.adjascentTiles = this.getAdjacentTiles(idx);
+
+    // get potentially temporary revealed tiles
+    const revealTiles = [...this.adjascentTiles, this.currentTarget];
+
+    // filter out the non qualified for temporary reveal tiles
+    this.tempRevealedTiles = revealTiles.filter((tile) => !tile.open && tile.flagged != FlagType.FLAGGED);
+    // reveal em!
+    this.tempRevealedTiles.forEach(tile => tile.symbol.classList.remove('-closed'));
+
+    if (this.tempRevealedTiles.length) {
+      this.smiley.classList.add('anticipation');
+    }
+  }
+
+  onLeftMouseDown(e: EventWithTarget) {
+    this.currentTarget = this.getTargetTile(e.target);
+    if (this.currentTarget && this.currentTarget.flagged !== FlagType.FLAGGED && !this.currentTarget.open) {
+      this.smiley.classList.add('anticipation');
+      this.currentTarget.symbol.classList.remove('-closed');
+    }
+  }
+
+  onLeftMouseUp(e: EventWithTarget) {
+    const clickedTile = this.getTargetTile(e.target);
+    if (!clickedTile) {
+      if (e.target === this.resetButton) {
+        this.onResetUp();
+      } else if (this.resetDown) {
+        this.resetDown = false;
+      }
+      this.smiley.classList.remove('anticipation');
+      if (this.currentTarget && !this.currentTarget.open) this.currentTarget.symbol.classList.add('-closed');
+    } else if (this.leftDown) {
+      this.tileClick(clickedTile);
+    }
+  }
+
+  tileClick(clickedTile: Tile) {
+    if (!this.gameReady) return;
+
+    this.previousTarget = undefined;
+    this.smiley.classList.remove('anticipation');
+
+    // Game start
+    if (!this.gameStarted) {
+      this.startGame(this.tiles.indexOf(clickedTile));
+      this.gameStarted = true;
+    }
+
+    // Game end
+    if (clickedTile.armed && clickedTile.flagged !== FlagType.FLAGGED) {
+      this.endGame(clickedTile);
+      return;
+    };
+
+    this.openTile(clickedTile);
+    this.checkGameState();
   }
 
   getTargetTile(target: HTMLElement): Tile {
@@ -213,6 +272,7 @@ class Game {
 
   onResetUp() {
     if (!this.resetDown) return;
+    this.resetDown = false;
     this.resetGame();
     this.newGame();
   }
@@ -273,16 +333,17 @@ class Game {
       }
     });
 
+    // Reset button interaction 
     this.resetButton.addEventListener('mousedown', (e: MouseEvent) => this.onResetDown(e));
     this.resetButton.addEventListener('mouseleave', () => this.resetButton.classList.remove('active'));
     this.resetButton.addEventListener('mouseover', () => this.onResetOver());
+    this.resetButton.addEventListener('mouseup', () => this.onResetUp());
 
-    this.world.addEventListener('mouseover', (e: EventWithTarget) => this.hoverState(e));
+    this.world.addEventListener('mouseover', (e: EventWithTarget) => this.onMouseOver(e));
     this.world.addEventListener('mousedown', (e: EventWithTarget) => this.onMouseDown(e));
-
     document.body.addEventListener('mouseup', (e: EventWithTarget) => this.onMouseUp(e));
   }
-
+ 
   startGame(clickedTileId: number) {
     this.setUpMines(clickedTileId);
     this.updateIndicators();
@@ -290,12 +351,17 @@ class Game {
   }
 
   startTimer() {
+    const ms = 1000;
     this.timer = 0;
     this.startTime = new Date().getTime();
     this.timerInterval = setInterval(() => {
-      this.timer = Math.floor((new Date().getTime() - this.startTime) / 1000);
+      this.timer = Math.floor((new Date().getTime() - this.startTime) / ms);
+      if (this.timer >= ms) {
+        clearInterval(this.timerInterval);
+        return;
+      }
       this.updateTimer();
-    }, 1000);
+    }, ms);
   }
 
   stopTimer() {
@@ -318,7 +384,6 @@ class Game {
     if (tile.open || tile.flagged === FlagType.FLAGGED) return;
     const idx = this.tiles.indexOf(tile);
 
-    tile.symbol.innerHTML = '';
     tile.open = true;
     tile.symbol.classList.remove('-closed');
 
@@ -330,7 +395,7 @@ class Game {
     }
   }
 
-  onRightClick(e: EventWithTarget) {
+  onRightMouseDown(e: EventWithTarget) {
     const clickedTile = this.getTargetTile(e.target);
     if (!clickedTile) return;
 

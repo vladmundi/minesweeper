@@ -52,6 +52,7 @@ body {
 
 .world {
   background: var(--background-dark);
+  pointer-events: none;
 }
 
 .tile,
@@ -67,7 +68,11 @@ body {
   user-select: none;
 }
 
-.tile div {
+.tile {
+  pointer-events: all;
+}
+
+.tile * {
   pointer-events: none;
 }
 
