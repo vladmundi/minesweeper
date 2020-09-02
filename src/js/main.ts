@@ -1,10 +1,11 @@
-import {tileConfig, presetDifficulties} from './config';
-import {FlagType, IndicatorColors, MouseButton} from './constants';
-import {FancyNumberDisplay} from './fancyNumberDisplay';
-import {FlagGenerator} from './generators/flagGenerator';
-import {MineGenerator} from './generators/mineGenerator';
-import {EventWithTarget, Tile, GameConfig} from './types';
-
+import { tileConfig, presetDifficulties } from "./config";
+import { FlagType, IndicatorColors, MouseButton } from "./constants";
+import { FancyNumberDisplay } from "./fancyNumberDisplay";
+import { FlagGenerator } from "./generators/flagGenerator";
+import { MineGenerator } from "./generators/mineGenerator";
+import { EventWithTarget, Tile, GameConfig } from "./types";
+import { Options } from "./options";
+// import '../html/tile.html';
 
 class Game {
   // Game element arrays
@@ -12,11 +13,11 @@ class Game {
   mines: Array<number> = [];
 
   // Markup references
-  world = document.getElementById('world');
-  timerDisplay = document.getElementById('timer');
-  countdownDisplay = document.getElementById('countdown');
-  resetButton = document.getElementById('reset-button');
-  smiley = document.getElementsByClassName('smiley')[0];
+  world = document.getElementById("world");
+  timerDisplay = document.getElementById("timer");
+  countdownDisplay = document.getElementById("countdown");
+  resetButton = document.getElementById("reset-button");
+  smiley = document.getElementsByClassName("smiley")[0];
 
   // Generators
   mineGenerator = new MineGenerator();
@@ -45,9 +46,13 @@ class Game {
   tempRevealedTiles: Array<Tile> = [];
   adjascentTiles: Array<Tile> = [];
 
+  // Classes
+  options: Options;
+
   constructor() {
     this.gameConfig = presetDifficulties.beginner;
     this.resetButton.style.borderWidth = `${tileConfig.border}px`;
+    this.options = new Options();
     this.setUpInteraction();
     this.newGame();
     this.resize();
@@ -56,14 +61,13 @@ class Game {
   onMouseDown(e: EventWithTarget) {
     if (!this.gameReady) return;
 
-    switch(e.button) {
+    switch (e.button) {
       case MouseButton.LEFT:
         this.leftDown = true;
         if (!this.middleDown && !this.rightDown) this.onLeftMouseDown(e);
         break;
 
       case MouseButton.MIDDLE:
-        this.middleDown = true;
         this.onMiddleMouseDown(e);
         break;
 
@@ -77,7 +81,6 @@ class Game {
     }
 
     if (this.leftDown && this.rightDown) {
-      this.middleDown = true;
       this.onMiddleMouseDown(e);
     }
   }
@@ -85,37 +88,35 @@ class Game {
   onMouseUp(e: EventWithTarget) {
     if (!this.gameReady) return;
 
-    switch(e.button) {
+    switch (e.button) {
       case MouseButton.LEFT:
         if (!this.middleDown && !this.rightDown) this.onLeftMouseUp(e);
+        if (this.rightDown) this.onMiddleMouseUp(e);
         break;
 
       case MouseButton.MIDDLE:
-        this.onMiddleUp(e);
+        this.onMiddleMouseUp(e);
         break;
 
       case MouseButton.RIGHT:
+        if (this.leftDown) this.onMiddleMouseUp(e);
         break;
 
       default:
         return;
     }
 
-    if (this.leftDown && this.rightDown) {
-      this.onMiddleUp(e);
-    }
-
-    // This is dodgy but will do for the time being...
-    setTimeout(() => {
-      this.leftDown = false;
-      this.rightDown = false;
-    }, 50);
+    // meh
+    setTimeout(() => (this.rightDown = false), 50);
+    this.leftDown = false;
+    this.middleDown = false;
   }
 
   onMouseOver(e: EventWithTarget) {
     if (this.leftDown && !this.rightDown) this.onLeftMouseOver(e);
-    if (this.middleDown || (this.leftDown && this.rightDown)) this.onMiddleMouseOver(e);
-    if (this.rightDown && !this.leftDown) console.log('TODO: enable multiple flagging?');
+    if (this.middleDown || (this.leftDown && this.rightDown))
+      this.onMiddleMouseOver(e);
+    // if (this.rightDown && !this.leftDown)
   }
 
   onMiddleMouseOver(e: EventWithTarget) {
@@ -124,7 +125,9 @@ class Game {
     const idx = this.tiles.indexOf(this.currentTarget);
 
     // unreveal tiles
-    this.tempRevealedTiles.forEach(tile => tile.symbol.classList.add('-closed'));
+    this.tempRevealedTiles.forEach((tile) =>
+      tile.symbol.classList.add("-closed")
+    );
 
     // Store current adjascentTiles references
     this.adjascentTiles = this.getAdjacentTiles(idx);
@@ -133,55 +136,71 @@ class Game {
     const revealTiles = [...this.adjascentTiles, this.currentTarget];
 
     // filter out the non qualified for temporary reveal tiles
-    this.tempRevealedTiles = revealTiles.filter((tile) => !tile.open && tile.flagged != FlagType.FLAGGED);
+    this.tempRevealedTiles = revealTiles.filter(
+      (tile) => !tile.open && tile.flagged != FlagType.FLAGGED
+    );
     // reveal em!
-    this.tempRevealedTiles.forEach(tile => tile.symbol.classList.remove('-closed'));
+    this.tempRevealedTiles.forEach((tile) =>
+      tile.symbol.classList.remove("-closed")
+    );
 
     if (this.tempRevealedTiles.length) {
-      this.smiley.classList.add('anticipation');
+      this.smiley.classList.add("anticipation");
     } else {
-      this.smiley.classList.remove('anticipation');
+      this.smiley.classList.remove("anticipation");
     }
   }
 
   onLeftMouseOver(e: EventWithTarget) {
-    this.previousTarget =
-        !!this.currentTarget ? this.currentTarget : this.previousTarget;
+    this.previousTarget = !!this.currentTarget
+      ? this.currentTarget
+      : this.previousTarget;
 
     this.currentTarget = this.getTargetTile(e.target);
 
     if (this.currentTarget) {
-      if (this.currentTarget.flagged !== FlagType.FLAGGED && !this.currentTarget.open) {
-        this.smiley.classList.add('anticipation');
-        this.currentTarget.symbol.classList.remove('-closed');
+      if (
+        this.currentTarget.flagged !== FlagType.FLAGGED &&
+        !this.currentTarget.open
+      ) {
+        this.smiley.classList.add("anticipation");
+        this.currentTarget.symbol.classList.remove("-closed");
       } else {
-        this.smiley.classList.remove('anticipation');
+        this.smiley.classList.remove("anticipation");
       }
     }
 
-    if (this.currentTarget !== this.previousTarget && this.previousTarget &&
-        !this.previousTarget.open) {
-      this.previousTarget.symbol.classList.add('-closed');
+    if (
+      this.currentTarget !== this.previousTarget &&
+      this.previousTarget &&
+      !this.previousTarget.open
+    ) {
+      this.previousTarget.symbol.classList.add("-closed");
     }
   }
 
-  onMiddleUp(e: EventWithTarget) {
+  onMiddleMouseUp(e: EventWithTarget) {
     this.middleDown = false;
     const target = this.getTargetTile(e.target);
     if (target && target.open && target.proximity) {
       // amount of tiles that are in proximity and flagged
-      const flaggedTilesAmount = this.adjascentTiles.filter((tile) => tile.flagged === FlagType.FLAGGED).length;
+      const flaggedTilesAmount = this.adjascentTiles.filter(
+        (tile) => tile.flagged === FlagType.FLAGGED
+      ).length;
       if (flaggedTilesAmount === target.proximity) {
         this.adjascentTiles.forEach((tile) => this.tileClick(tile));
-        this.smiley.classList.remove('anticipation');
+        this.smiley.classList.remove("anticipation");
         return;
       }
     }
-    this.tempRevealedTiles.forEach((tile) => tile.symbol.classList.add('-closed'));
-    this.smiley.classList.remove('anticipation');
+    this.tempRevealedTiles.forEach((tile) =>
+      tile.symbol.classList.add("-closed")
+    );
+    this.smiley.classList.remove("anticipation");
   }
 
   onMiddleMouseDown(e: EventWithTarget) {
+    this.middleDown = true;
     this.currentTarget = this.getTargetTile(e.target);
     const idx = this.tiles.indexOf(this.currentTarget);
 
@@ -192,20 +211,28 @@ class Game {
     const revealTiles = [...this.adjascentTiles, this.currentTarget];
 
     // filter out the non qualified for temporary reveal tiles
-    this.tempRevealedTiles = revealTiles.filter((tile) => !tile.open && tile.flagged != FlagType.FLAGGED);
+    this.tempRevealedTiles = revealTiles.filter(
+      (tile) => !tile.open && tile.flagged != FlagType.FLAGGED
+    );
     // reveal em!
-    this.tempRevealedTiles.forEach(tile => tile.symbol.classList.remove('-closed'));
+    this.tempRevealedTiles.forEach((tile) =>
+      tile.symbol.classList.remove("-closed")
+    );
 
     if (this.tempRevealedTiles.length) {
-      this.smiley.classList.add('anticipation');
+      this.smiley.classList.add("anticipation");
     }
   }
 
   onLeftMouseDown(e: EventWithTarget) {
     this.currentTarget = this.getTargetTile(e.target);
-    if (this.currentTarget && this.currentTarget.flagged !== FlagType.FLAGGED && !this.currentTarget.open) {
-      this.smiley.classList.add('anticipation');
-      this.currentTarget.symbol.classList.remove('-closed');
+    if (
+      this.currentTarget &&
+      this.currentTarget.flagged !== FlagType.FLAGGED &&
+      !this.currentTarget.open
+    ) {
+      this.smiley.classList.add("anticipation");
+      this.currentTarget.symbol.classList.remove("-closed");
     }
   }
 
@@ -217,9 +244,10 @@ class Game {
       } else if (this.resetDown) {
         this.resetDown = false;
       }
-      this.smiley.classList.remove('anticipation');
-      if (this.currentTarget && !this.currentTarget.open) this.currentTarget.symbol.classList.add('-closed');
-    } else if (this.leftDown) {
+      this.smiley.classList.remove("anticipation");
+      if (this.currentTarget && !this.currentTarget.open)
+        this.currentTarget.symbol.classList.add("-closed");
+    } else {
       this.tileClick(clickedTile);
     }
   }
@@ -228,7 +256,7 @@ class Game {
     if (!this.gameReady) return;
 
     this.previousTarget = undefined;
-    this.smiley.classList.remove('anticipation');
+    this.smiley.classList.remove("anticipation");
 
     // Game start
     if (!this.gameStarted) {
@@ -240,14 +268,14 @@ class Game {
     if (clickedTile.armed && clickedTile.flagged !== FlagType.FLAGGED) {
       this.endGame(clickedTile);
       return;
-    };
+    }
 
     this.openTile(clickedTile);
     this.checkGameState();
   }
 
   getTargetTile(target: HTMLElement): Tile {
-    return this.tiles.find(tile => tile.symbol === target);
+    return this.tiles.find((tile) => tile.symbol === target);
   }
 
   newGame() {
@@ -261,12 +289,12 @@ class Game {
   onResetDown(e: MouseEvent) {
     if (e.button === MouseButton.RIGHT) return;
     this.resetDown = true;
-    this.resetButton.classList.add('active');
+    this.resetButton.classList.add("active");
   }
 
   onResetOver() {
     if (this.resetDown) {
-      this.resetButton.classList.add('active');
+      this.resetButton.classList.add("active");
     }
   }
 
@@ -278,21 +306,21 @@ class Game {
   }
 
   resetGame() {
-    this.world.innerHTML = '';
+    this.world.innerHTML = "";
     this.stopTimer();
     this.timer = 0;
     this.updateTimer();
     this.tiles = [];
     this.mines = [];
-    this.resetButton.classList.remove('active');
-    this.smiley.classList.remove('dead');
-    this.smiley.classList.remove('win');
+    this.resetButton.classList.remove("active");
+    this.smiley.classList.remove("dead");
+    this.smiley.classList.remove("win");
     this.countdown = this.gameConfig.mines;
     this.gameStarted = false;
   }
 
   resize() {
-    const gameWindow: HTMLElement = document.querySelector('.window');
+    const gameWindow: HTMLElement = document.querySelector(".window");
     const docDimensions = {
       x: window.innerWidth,
       y: window.innerHeight,
@@ -304,12 +332,14 @@ class Game {
     const xr = 1 / (docDimensions.x / gameDimensions.x);
     const yr = 1 / (docDimensions.y / gameDimensions.y);
 
-    if (docDimensions.x < gameDimensions.x ||
-        docDimensions.y < gameDimensions.y) {
+    if (
+      docDimensions.x < gameDimensions.x ||
+      docDimensions.y < gameDimensions.y
+    ) {
       if (xr > yr) {
-        gameWindow.style.transform = `scale(${1 / xr - .05})`;
+        gameWindow.style.transform = `scale(${1 / xr - 0.05})`;
       } else {
-        gameWindow.style.transform = `scale(${1 / yr - .05})`;
+        gameWindow.style.transform = `scale(${1 / yr - 0.05})`;
       }
     }
   }
@@ -325,25 +355,35 @@ class Game {
   }
 
   setUpInteraction() {
-    const window = document.querySelector('.window');
-    window.addEventListener('contextmenu', (e) => e.preventDefault());
-    window.addEventListener('mousedown', (e: MouseEvent) => {
+    const window = document.querySelector(".window");
+    window.addEventListener("contextmenu", (e) => e.preventDefault());
+    window.addEventListener("mousedown", (e: MouseEvent) => {
       if (e.button === MouseButton.MIDDLE) {
         e.preventDefault();
       }
     });
 
-    // Reset button interaction 
-    this.resetButton.addEventListener('mousedown', (e: MouseEvent) => this.onResetDown(e));
-    this.resetButton.addEventListener('mouseleave', () => this.resetButton.classList.remove('active'));
-    this.resetButton.addEventListener('mouseover', () => this.onResetOver());
-    this.resetButton.addEventListener('mouseup', () => this.onResetUp());
+    // Reset button interaction
+    this.resetButton.addEventListener("mousedown", (e: MouseEvent) =>
+      this.onResetDown(e)
+    );
+    this.resetButton.addEventListener("mouseleave", () =>
+      this.resetButton.classList.remove("active")
+    );
+    this.resetButton.addEventListener("mouseover", () => this.onResetOver());
+    this.resetButton.addEventListener("mouseup", () => this.onResetUp());
 
-    this.world.addEventListener('mouseover', (e: EventWithTarget) => this.onMouseOver(e));
-    this.world.addEventListener('mousedown', (e: EventWithTarget) => this.onMouseDown(e));
-    document.body.addEventListener('mouseup', (e: EventWithTarget) => this.onMouseUp(e));
+    this.world.addEventListener("mouseover", (e: EventWithTarget) =>
+      this.onMouseOver(e)
+    );
+    this.world.addEventListener("mousedown", (e: EventWithTarget) =>
+      this.onMouseDown(e)
+    );
+    document.body.addEventListener("mouseup", (e: EventWithTarget) =>
+      this.onMouseUp(e)
+    );
   }
- 
+
   startGame(clickedTileId: number) {
     this.setUpMines(clickedTileId);
     this.updateIndicators();
@@ -370,11 +410,11 @@ class Game {
 
   checkGameState() {
     // Basically a win game scenario
-    const armedTiles = this.tiles.filter(tile => tile.armed);
-    const closedTiles = this.tiles.filter(tile => !tile.open);
+    const armedTiles = this.tiles.filter((tile) => tile.armed);
+    const closedTiles = this.tiles.filter((tile) => !tile.open);
     if (armedTiles.length === closedTiles.length) {
-      armedTiles.forEach(tile => this.flagTile(tile, true));
-      this.smiley.classList.add('win');
+      armedTiles.forEach((tile) => this.flagTile(tile, true));
+      this.smiley.classList.add("win");
       this.stopTimer();
       this.gameReady = false;
     }
@@ -385,13 +425,14 @@ class Game {
     const idx = this.tiles.indexOf(tile);
 
     tile.open = true;
-    tile.symbol.classList.remove('-closed');
+    tile.symbol.classList.remove("-closed");
 
     if (tile.proximity) {
       tile.symbol.innerHTML = tile.proximity.toString();
       tile.symbol.style.color = IndicatorColors[tile.proximity - 1];
     } else {
-      this.getAdjacentTiles(idx).forEach(tile => this.openTile(tile));
+      tile.symbol.innerHTML = "";
+      this.getAdjacentTiles(idx).forEach((tile) => this.openTile(tile));
     }
   }
 
@@ -403,10 +444,10 @@ class Game {
   }
 
   flagTile(tile: Tile, forceFlag: boolean = false) {
-    if (tile.open || forceFlag && tile.flagged === FlagType.FLAGGED) return;
+    if (tile.open || (forceFlag && tile.flagged === FlagType.FLAGGED)) return;
 
     if (forceFlag && tile.flagged !== FlagType.FLAGGED) {
-      tile.symbol.innerHTML = '';
+      tile.symbol.innerHTML = "";
       tile.symbol.appendChild(this.flagGenerator.dispatch());
       tile.flagged = FlagType.FLAGGED;
       this.countdown--;
@@ -416,7 +457,7 @@ class Game {
 
     switch (tile.flagged) {
       case FlagType.NONE:
-        tile.symbol.innerHTML = '';
+        tile.symbol.innerHTML = "";
         tile.symbol.appendChild(this.flagGenerator.dispatch());
         tile.flagged = FlagType.FLAGGED;
         this.countdown--;
@@ -424,14 +465,14 @@ class Game {
         break;
 
       case FlagType.FLAGGED:
-        tile.symbol.innerHTML = '?';
+        tile.symbol.innerHTML = "?";
         tile.flagged = FlagType.POSSIBLE;
         this.countdown++;
         this.updateCountdown();
         break;
 
       case FlagType.POSSIBLE:
-        tile.symbol.innerHTML = '';
+        tile.symbol.innerHTML = "";
         tile.flagged = FlagType.NONE;
         break;
     }
@@ -439,11 +480,19 @@ class Game {
 
   drawMap() {
     const tileSize = tileConfig.size + tileConfig.border * 2 + tileConfig.gap;
-    this.world.style.width = `${this.gameConfig.size.x * tileSize + tileConfig.gap}px`;
-    this.world.style.height = `${this.gameConfig.size.y * tileSize + tileConfig.gap}px`;
-    for (var i = 0, il = this.gameConfig.size.x * this.gameConfig.size.y; i < il; i++) {
-      const tile = document.createElement('DIV');
-      tile.classList.add('tile', '-closed');
+    this.world.style.width = `${
+      this.gameConfig.size.x * tileSize + tileConfig.gap
+    }px`;
+    this.world.style.height = `${
+      this.gameConfig.size.y * tileSize + tileConfig.gap
+    }px`;
+    for (
+      var i = 0, il = this.gameConfig.size.x * this.gameConfig.size.y;
+      i < il;
+      i++
+    ) {
+      const tile = document.createElement("DIV");
+      tile.classList.add("tile", "-closed");
       tile.id = `${i}`;
 
       tile.style.height = `${tileConfig.size}px`;
@@ -466,11 +515,13 @@ class Game {
   }
 
   async setUpMines(clickedTileId: number) {
-    const nonArmedTileIds: Array<number> =
-        this.getAdjacentTiles(clickedTileId)
-            .map(tile => parseInt(tile.symbol.id));
+    const nonArmedTileIds: Array<number> = this.getAdjacentTiles(
+      clickedTileId
+    ).map((tile) => parseInt(tile.symbol.id));
     while (this.mines.length < this.gameConfig.mines) {
-      let place = Math.floor(Math.random() * this.gameConfig.size.x * this.gameConfig.size.y);
+      let place = Math.floor(
+        Math.random() * this.gameConfig.size.x * this.gameConfig.size.y
+      );
 
       if (this.tiles[place].armed || place === clickedTileId) continue;
       if (nonArmedTileIds.includes(place)) {
@@ -483,10 +534,14 @@ class Game {
   }
 
   updateIndicators() {
-    for (var i = 0, il = this.gameConfig.size.x * this.gameConfig.size.y; i < il; i++) {
+    for (
+      var i = 0, il = this.gameConfig.size.x * this.gameConfig.size.y;
+      i < il;
+      i++
+    ) {
       const iteratedTile = this.tiles[i];
 
-      this.getAdjacentTiles(i).forEach(tile => {
+      this.getAdjacentTiles(i).forEach((tile) => {
         if (tile.armed && !iteratedTile.armed) {
           iteratedTile.proximity++;
         }
@@ -495,19 +550,19 @@ class Game {
   }
 
   endGame(tile: Tile) {
-    tile.symbol.style.background = 'red';
+    tile.symbol.style.background = "red";
 
-    this.smiley.classList.add('dead');
+    this.smiley.classList.add("dead");
 
-    this.tiles.forEach(tile => {
+    this.tiles.forEach((tile) => {
       const nonMarked = tile.armed && tile.flagged !== FlagType.FLAGGED;
       const wronglyMarked = !tile.armed && tile.flagged === FlagType.FLAGGED;
       if (nonMarked || wronglyMarked) {
-        tile.symbol.innerHTML = '';
-        tile.symbol.classList.remove('-closed');
+        tile.symbol.innerHTML = "";
+        tile.symbol.classList.remove("-closed");
         tile.symbol.appendChild(this.mineGenerator.dispatch());
 
-        if (wronglyMarked) tile.symbol.classList.add('-cross');
+        if (wronglyMarked) tile.symbol.classList.add("-cross");
       }
     });
 
@@ -518,9 +573,13 @@ class Game {
   getAdjacentTiles(id: number) {
     // Top tiles
     const topTiles = [
-      id % this.gameConfig.size.x ? this.tiles[id - this.gameConfig.size.x - 1] : undefined,
+      id % this.gameConfig.size.x
+        ? this.tiles[id - this.gameConfig.size.x - 1]
+        : undefined,
       this.tiles[id - this.gameConfig.size.x],
-      (id + 1) % this.gameConfig.size.x ? this.tiles[id - this.gameConfig.size.x + 1] : undefined,
+      (id + 1) % this.gameConfig.size.x
+        ? this.tiles[id - this.gameConfig.size.x + 1]
+        : undefined,
     ];
 
     const sideTiles = [
@@ -529,14 +588,18 @@ class Game {
     ];
 
     const bottomTiles = [
-      id % this.gameConfig.size.x ? this.tiles[id + this.gameConfig.size.x - 1] : undefined,
+      id % this.gameConfig.size.x
+        ? this.tiles[id + this.gameConfig.size.x - 1]
+        : undefined,
       this.tiles[id + this.gameConfig.size.x],
-      (id + 1) % this.gameConfig.size.x ? this.tiles[id + this.gameConfig.size.x + 1] : undefined,
+      (id + 1) % this.gameConfig.size.x
+        ? this.tiles[id + this.gameConfig.size.x + 1]
+        : undefined,
     ];
 
-    return [...topTiles, ...sideTiles, ...bottomTiles].filter(a => a);
+    return [...topTiles, ...sideTiles, ...bottomTiles].filter((a) => a);
   }
-};
+}
 
 (() => {
   new Game();

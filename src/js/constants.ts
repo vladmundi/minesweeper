@@ -1,5 +1,5 @@
 /**
- * Dashes are represented by numbers in following fashion: 
+ * Dashes are represented by numbers in following fashion:
  * 1 - top left
  * 2 - bottom left
  * 3 - top
@@ -23,14 +23,14 @@ export const FancyNumbers = [
 ];
 
 export const IndicatorColors = [
-  'blue',
-  'green',
-  'red',
-  'dark blue',
-  'brown',
-  'cyan',
-  'black',
-  'grey',
+  "blue",
+  "green",
+  "red",
+  "dark blue",
+  "brown",
+  "cyan",
+  "black",
+  "grey",
 ];
 
 export const FlagType = {
@@ -43,4 +43,4 @@ export const MouseButton = {
   LEFT: 0, // Main button pressed, usually the left button or the un-initialized state
   MIDDLE: 1, // Auxiliary button pressed, usually the wheel button or the middle button (if present)
   RIGHT: 2, // Secondary button pressed, usually the right button
-}
+};

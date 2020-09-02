@@ -1,0 +1,93 @@
+.smiley {
+  align-items: center;
+  background: yellow;
+  border: 4px solid black;
+  border-radius: 50%;
+  display: flex;
+  flex: 0 0 70%;
+  height: 70%;
+  justify-content: center;
+  width: 70%;
+
+  &::after,
+  &::before {
+    background: black;
+    border: 1px solid black;
+    border-radius: 50%;
+    content: "";
+    height: 10px;
+    margin-left: -15px;
+    position: absolute;
+    top: 35%;
+    width: 10px;
+  }
+
+  &::after {
+    margin-left: 15px;
+  }
+
+  &.anticipation {
+    &::after,
+    &::before {
+      height: 16px;
+      margin-top: -3px;
+      width: 16px;
+    }
+
+    .smile {
+      border-color: black;
+      height: 20%;
+      top: 14px;
+      width: 20%;
+    }
+  }
+
+  &.dead {
+    &::after,
+    &::before {
+      align-items: center;
+      background: none;
+      border: none;
+      content: "\00D7";
+      display: flex;
+      font-size: 40px;
+      justify-content: center;
+      line-height: 0;
+    }
+
+    .smile {
+      border-color: transparent;
+      border-top-color: black;
+      top: 28px;
+    }
+  }
+
+  &.win {
+    &::after {
+      align-items: center;
+      background: none;
+      border: none;
+      content: "\01F576";
+      display: flex;
+      font-size: 60px;
+      height: 100%;
+      justify-content: center;
+      margin: 0;
+      top: 0;
+      transform: translateY(-7px);
+    }
+
+    &::before {
+      content: "";
+    }
+  }
+
+  .smile {
+    border: 4px solid transparent;
+    border-bottom-color: black;
+    border-radius: 50%;
+    height: 40%;
+    position: relative;
+    width: 40%;
+  }
+}

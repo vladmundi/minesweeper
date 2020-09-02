@@ -95,7 +95,7 @@ body {
 .tile.-cross::after,
 .tile.-cross::before {
   background: red;
-  content: '';
+  content: "";
   display: block;
   height: 4px;
   position: absolute;
@@ -114,94 +114,6 @@ body {
   height: 100px;
   justify-content: center;
   width: 100px;
-}
-
-.smiley {
-  align-items: center;
-  background: yellow;
-  border: 4px solid black;
-  border-radius: 50%;
-  display: flex;
-  flex: 0 0 70%;
-  height: 70%;
-  justify-content: center;
-  width: 70%;
-}
-
-.smiley::after,
-.smiley::before {
-  background: black;
-  border: 1px solid black;
-  border-radius: 50%;
-  content: '';
-  height: 10px;
-  margin-left: -15px;
-  position: absolute;
-  top: 35%;
-  width: 10px;
-}
-
-.smiley.anticipation::after,
-.smiley.anticipation::before {
-  height: 16px;
-  margin-top: -3px;
-  width: 16px;
-}
-
-.smiley.dead::after,
-.smiley.dead::before {
-  align-items: center;
-  background: none;
-  border: none;
-  content: '\00D7';
-  display: flex;
-  font-size: 40px;
-  justify-content: center;
-  line-height: 0;
-}
-
-.smiley.win::after {
-  align-items: center;
-  background: none;
-  border: none;
-  content: '\01F576';
-  display: flex;
-  font-size: 60px;
-  height: 100%;
-  justify-content: center;
-  margin: 0;
-  top: 0;
-  transform: translateY(-7px);
-}
-
-.smiley.win::before {
-  content: '';
-}
-
-.smiley::after {
-  margin-left: 15px;
-}
-
-.smile {
-  border: 4px solid transparent;
-  border-bottom-color: black;
-  border-radius: 50%;
-  height: 40%;
-  position: relative;
-  width: 40%;
-}
-
-.smiley.dead .smile {
-  border-color: transparent;
-  border-top-color: black;
-  top: 28px;
-}
-
-.smiley.anticipation .smile {
-  border-color: black;
-  height: 20%;
-  top: 14px;
-  width: 20%;
 }
 
 .mine {
@@ -226,21 +138,24 @@ body {
   width: 36px;
 }
 
-.mine::before,
-.mine::after,
-.mine-cross-spikes::before,
-.mine-cross-spikes::after {
-  background: black;
-  content: '';
-  display: block;
-  height: 6px;
-  position: absolute;
-  width: 50px;
+.mine,
+.mine-cross-spikes {
+  &::before,
+  &::after {
+    background: black;
+    content: "";
+    display: block;
+    height: 6px;
+    position: absolute;
+    width: 50px;
+  }
 }
 
-.mine::after,
-.mine-cross-spikes::after {
-  transform: rotate(90deg);
+.mine,
+.mine-cross-spikes {
+  &::after {
+    transform: rotate(90deg);
+  }
 }
 
 .mine-highlight {
@@ -260,26 +175,28 @@ body {
   width: 6px;
 }
 
-.flag::before,
-.flag::after {
-  content: '';
-  position: absolute;
-}
+.flag {
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+  }
 
-.flag::before {
-  border: 20px solid transparent;
-  border-radius: 10px;
-  border-top-color: black;
-  border-top-width: 6px;
-  bottom: -16px;
-  left: 5px;
-}
+  &::before {
+    border: 20px solid transparent;
+    border-radius: 10px;
+    border-top-color: black;
+    border-top-width: 6px;
+    bottom: -16px;
+    left: 5px;
+  }
 
-.flag::after {
-  border: 12px solid transparent;
-  border-right: 20px solid red;
-  right: 24px;
-  top: 2px;
+  &::after {
+    border: 12px solid transparent;
+    border-right: 20px solid red;
+    right: 24px;
+    top: 2px;
+  }
 }
 
 .countdown,
@@ -316,7 +233,7 @@ body {
 .dash::before,
 .dash::after {
   border: 5px solid #580101;
-  content: '';
+  content: "";
   position: absolute;
 }
 

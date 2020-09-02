@@ -2,7 +2,7 @@ export const tileConfig = {
   gap: 4,
   border: 7,
   size: 54,
-}
+};
 
 export const presetDifficulties = {
   beginner: {
@@ -25,5 +25,5 @@ export const presetDifficulties = {
       y: 16,
     },
     mines: 99,
-  }
-}
+  },
+};

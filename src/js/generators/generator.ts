@@ -9,4 +9,4 @@ export class Generator {
   dispatch(): HTMLElement {
     return this.item.cloneNode(true);
   }
-};
+}
