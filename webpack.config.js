@@ -1,19 +1,41 @@
 const path = require("path");
-const CopyPlugin = require("copy-webpack-plugin");
 
 module.exports = {
+  optimization: {
+    splitChunks: {
+      cacheGroups: {
+        styles: {
+          name: "styles",
+          test: /\.css$/,
+          chunks: "all",
+          enforce: true,
+        },
+      },
+    },
+  },
   watch: false,
   watchOptions: {
     aggregateTimeout: 300,
     poll: 1000,
   },
-  entry: "./src/js/main.ts",
+  entry: [__dirname + "/src/js/main.ts", __dirname + "/src/styles/style.scss"],
   module: {
     rules: [
       {
         test: /\.tsx?$/,
-        use: "ts-loader",
+        use: ["ts-loader"],
         exclude: /node_modules/,
+      },
+      {
+        test: /\.scss$/,
+        exclude: /node_modules/,
+        use: [
+          {
+            loader: "file-loader",
+            options: { outputPath: "", name: "style.css" },
+          },
+          "sass-loader",
+        ],
       },
     ],
   },
@@ -24,12 +46,4 @@ module.exports = {
     filename: "bundle.js",
     path: path.resolve(__dirname, "dist"),
   },
-  plugins: [
-    new CopyPlugin({
-      patterns: [
-        { from: path.resolve(__dirname, "index.html"), to: "dist" },
-        { from: path.resolve(__dirname, "/styles"), to: "dist" },
-      ],
-    }),
-  ],
 };

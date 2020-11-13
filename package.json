@@ -7,8 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "npm run clean && npm run copy && webpack",
     "clean": "rm -rf dist",
-    "copy": "mkdir dist && cp index.html dist/index.html && cp style.css dist/style.css && cp options.css dist/options.css",
-    "start": "npm run build && start dist/index.html"
+    "copy": "mkdir dist && cp index.html dist/index.html",
+    "start": "npm run clean && npm run build && chrome dist/index.html"
   },
   "repository": {
     "type": "git",
@@ -21,7 +21,8 @@
   },
   "homepage": "https://github.com/vladmundi/minesweeper#readme",
   "devDependencies": {
-    "copy-webpack-plugin": "^6.1.0",
+    "file-loader": "^6.2.0",
+    "node-sass": "^5.0.0",
     "prettier": "^2.1.1",
     "sass": "^1.26.10",
     "sass-loader": "^9.0.2",
