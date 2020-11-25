@@ -4,7 +4,7 @@ import { FancyNumberDisplay } from "./fancyNumberDisplay";
 import { FlagGenerator } from "./generators/flagGenerator";
 import { MineGenerator } from "./generators/mineGenerator";
 import { EventWithTarget, Tile, GameConfig } from "./types";
-import { Options } from "./options";
+import { SideMenu } from "./sideMenu";
 // import '../html/tile.html';
 
 class Game {
@@ -47,12 +47,12 @@ class Game {
   adjascentTiles: Array<Tile> = [];
 
   // Classes
-  options: Options;
+  sideMenu: SideMenu;
 
   constructor() {
     this.gameConfig = presetDifficulties.beginner;
     this.resetButton.style.borderWidth = `${tileConfig.border}px`;
-    this.options = new Options();
+    this.sideMenu = new SideMenu();
     this.setUpInteraction();
     this.newGame();
     this.resize();
